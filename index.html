@@ -5,61 +5,95 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SAFE ZONE - Demo Đa Kịch Bản Thiên Tai Việt Nam</title>
     
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/5556/5556468.png" type="image/png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
+    
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; display: flex; height: 100vh; }
-        #map { flex: 3; height: 100%; }
-        #sidebar { flex: 1; background: #2c3e50; color: white; padding: 20px; display: flex; flex-direction: column; box-shadow: -2px 0 5px rgba(0,0,0,0.3); overflow-y: auto; }
-        h2 { color: #e74c3c; margin-top: 0; border-bottom: 2px solid #e74c3c; padding-bottom: 10px; }
-        .mode-box { background: #34495e; padding: 10px; border-radius: 5px; margin-bottom: 12px; border: 1px solid #4f5d73; }
-        .mode-title { font-weight: bold; margin-bottom: 6px; color: #3498db; font-size: 13.5px; }
-        .btn { width: 100%; color: white; border: none; padding: 8px; font-size: 13px; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 5px; transition: 0.3s; }
-        .btn-real { background: #2ecc71; } .btn-real:hover { background: #27ae60; }
-        .btn-sim { background: #e67e22; } .btn-sim:hover { background: #d35400; }
-        #ai-box { background: #1a252f; border-left: 5px solid #e74c3c; padding: 15px; margin-top: 10px; border-radius: 4px; flex-grow: 1; }
-        .ai-title { color: #e74c3c; font-weight: bold; margin-bottom: 10px; }
-        .status { font-weight: bold; padding: 5px; border-radius: 3px; display: inline-block; margin-top: 5px; font-size: 12.5px; }
-        .danger { background: #e74c3c; color: white; }
-        .warning { background: #f1c40f; color: black; }
-        .safe { background: #2ecc71; color: white; }
+        body { margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; font-family: Arial, sans-serif; position: relative; }
+        #map { flex-grow: 1; height: 100vh; z-index: 1; }
+        #sidebar { width: 350px; background-color: #2c3e50; color: white; padding: 20px; overflow-y: auto; z-index: 999; box-shadow: -2px 0 10px rgba(0,0,0,0.5); transition: transform 0.3s ease; }
+        
+        .mode-box { background: #34495e; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .mode-title { font-weight: bold; margin-bottom: 10px; font-size: 14px; text-transform: uppercase;}
+        .status { padding: 10px; border-radius: 5px; font-weight: bold; text-align: center; margin-bottom: 15px; }
+        .safe { background: #27ae60; color: white; }
+        #ai-box { background: #1a252f; padding: 15px; border-radius: 8px; border-left: 4px solid #f39c12; }
+        .ai-title { font-weight: bold; color: #f39c12; margin-bottom: 10px; font-size: 14px; }
+
+        /* NÚT BẤM ẨN/HIỆN MENU (Chỉ xuất hiện trên điện thoại) */
+        #mobile-toggle {
+            position: absolute; top: 15px; right: 15px; z-index: 1000;
+            background: #e74c3c; color: white; border: none; padding: 10px 15px;
+            border-radius: 5px; font-weight: bold; cursor: pointer; display: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        /* TÙY CHỈNH RIÊNG CHO MÀN HÌNH ĐIỆN THOẠI (< 768px) */
+        @media (max-width: 768px) {
+            #mobile-toggle { display: block; } /* Hiện nút bấm */
+            #sidebar {
+                position: absolute; right: 0; top: 0; height: 100vh; width: 300px;
+                transform: translateX(100%); /* Mặc định giấu menu trượt ra ngoài 100% */
+            }
+            #sidebar.open {
+                transform: translateX(0); /* Hiện menu khi có lệnh */
+            }
+            /* Lớp phủ đen mờ trên bản đồ khi mở menu */
+            #map-overlay {
+                display: none; position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+                background: rgba(0,0,0,0.5); z-index: 998;
+            }
+            #map-overlay.open { display: block; }
+        }
     </style>
 </head>
 <body>
 
     <div id="map"></div>
 
-    <div id="sidebar">
-        <h2>SAFE ZONE</h2>
+    <div id="sidebar" class="d-flex flex-column">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h2 class="mb-0 text-danger" style="font-weight: 800;">SAFE ZONE</h2>
+            </div>
         
         <div class="mode-box">
-            <div class="mode-title">🌐 CHẾ ĐỘ THỰC TẾ TẠI CHỖ</div>
-            <button class="btn btn-real" onclick="startRealTimeGPS()">Quét Vị Trí Thực Tế (GPS)</button>
+            <div class="mode-title">🌐 Chế Độ Thực Tế Tại Chỗ</div>
+            <button class="btn btn-success w-100" onclick="startRealTimeGPS()">Quét Vị Trí Thực Tế (GPS)</button>
         </div>
 
         <div class="mode-box">
-            <div class="mode-title">⛰️ MÔ PHỎNG 1: ĐÈO MÃ PÍ LÈNG</div>
-            <button class="btn btn-sim" onclick="startSimMaPiLeng()">Kích Hoạt Kịch Bản Đèo</button>
+            <div class="mode-title">⛰️ Mô Phỏng 1: Đèo Mã Pí Lèng</div>
+            <button class="btn btn-warning w-100" onclick="startSimMaPiLeng()">Kích Hoạt Kịch Bản Đèo</button>
         </div>
 
         <div class="mode-box">
-            <div class="mode-title">🏞️ MÔ PHỎNG 2: MƯỜNG LAY (ĐIỆN BIÊN)</div>
-            <button class="btn btn-sim" onclick="startSimMuongLay()">Kích Hoạt Kịch Bản Sông Sườn</button>
+            <div class="mode-title">🏞️ Mô Phỏng 2: Mường Lay (Điện Biên)</div>
+            <button class="btn btn-warning w-100" onclick="startSimMuongLay()">Kích Hoạt Kịch Bản Sông Sườn</button>
         </div>
 
         <div class="mode-box">
-            <div class="mode-title">🌲 MÔ PHỎNG 3: VQG BÙ GIA MẬP</div>
-            <button class="btn btn-sim" onclick="startSimBGM()">Kích Hoạt Kịch Bản Rừng Núi</button>
+            <div class="mode-title">🌲 Mô Phỏng 3: VQG Bù Gia Mập</div>
+            <button class="btn btn-warning w-100" onclick="startSimBGM()">Kích Hoạt Kịch Bản Rừng Núi</button>
         </div>
-
+<body>
+    <button id="mobile-toggle" onclick="toggleMenu()">☰ Bảng Điều Khiển</button>
+    <div id="map-overlay" onclick="toggleMenu()"></div>
+    <div id="map"></div>
         <p style="margin: 10px 0 5px 0;">Trạng thái thiên tai:</p>
         <div id="user-status" class="status safe">Đang chờ kịch bản...</div>
 
         <div id="ai-box">
-            <div class="ai-title">🤖 CHATBOT AI PHÂN TÍCH LÝ THUYẾT ĐẤT:</div>
+            <div class="ai-title">🤖 PHÂN TÍCH LÝ THUYẾT ĐẤT:</div>
             <div id="ai-status">Vui lòng chọn kịch bản để phân tích...</div>
             <div id="ai-report" style="margin-top: 10px;"></div>
+        </div>
+
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #4f5d73;">
+            <div style="font-size: 11px; font-weight: bold; color: #f39c12; margin-bottom: 8px;">🔗 LIÊN KẾT KHÍ TƯỢNG:</div>
+            <a href="https://nchmf.gov.vn/" target="_blank" style="display: block; color: #64b5f6; text-decoration: none; font-size: 12px; margin-bottom: 5px;">📍 Trung tâm KTTV Quốc gia</a>
+            <a href="https://www.windy.com/?16.0,106.0,5" target="_blank" style="display: block; color: #64b5f6; text-decoration: none; font-size: 12px;">🌪️ Bản đồ Vệ tinh Windy</a>
         </div>
 
         <div style="margin-top: auto; padding-top: 15px; border-top: 1px solid #4f5d73; font-size: 11px; color: #bdc3c7; text-align: center;">
@@ -67,169 +101,231 @@
             Tác giả: Nguyễn Trần Anh Khoa & Tạ Hoàng Ngân<br>
             Lớp 10B - Trường THPT Chuyên Quang Trung
         </div>
-        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <script>
-        var map = L.map('map').setView([16.0, 106.0], 5); 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+      import * as L from 'leaflet/dist/leaflet-src.esm.js';
 
-        var userMarker = null;
-        var activeMarkers = [];
+const map = L.map('map').setView([16.0, 106.0], 5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        function clearOldLayers() {
-            if (userMarker) { map.removeLayer(userMarker); }
-            activeMarkers.forEach(function(m) { map.removeLayer(m); });
-            activeMarkers = [];
-            document.getElementById('ai-report').innerHTML = "";
+let userMarker = null;
+let activeMarkers = [];
+
+const localHazardGeoJSON = {
+    type: "FeatureCollection",
+    features: [
+        {
+            type: "Feature",
+            properties: { name: "Vùng sạt lở đèo Mã Pí Lèng", risk_level: "high" },
+            geometry: { type: "Polygon", coordinates: [[[105.4150, 22.4380], [105.4220, 22.4380], [105.4220, 22.4320], [105.4150, 22.4320], [105.4150, 22.4380]]] }
+        },
+        {
+            type: "Feature",
+            properties: { name: "Vùng nguy cơ sụt lún Mường Lay", risk_level: "high" },
+            geometry: { type: "Polygon", coordinates: [[[103.1450, 22.0700], [103.1550, 22.0700], [103.1550, 22.0640], [103.1450, 22.0640], [103.1450, 22.0700]]] }
+        },
+        {
+            type: "Feature",
+            properties: { name: "Khu vực đệm VQG Bù Gia Mập", risk_level: "medium" },
+            geometry: { type: "Polygon", coordinates: [[[107.2050, 12.2080], [107.2180, 12.2080], [107.2180, 12.1980], [107.2050, 12.1980], [107.2050, 12.2080]]] }
         }
+    ]
+};
 
-        // ==========================================
-        // CHẾ ĐỘ REAL-TIME GPS THỰC TẾ
-        // ==========================================
-        function startRealTimeGPS() {
-            clearOldLayers();
-            document.getElementById('ai-status').innerHTML = "⏳ Đang kết nối vệ tinh lấy tọa độ thật...";
-            
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    var lat = position.coords.latitude;
-                    var lng = position.coords.longitude;
-                    
-                    map.setView([lat, lng], 15);
-                    userMarker = L.circleMarker([lat, lng], { color: 'blue', fillColor: '#30f', fillOpacity: 0.8, radius: 10 }).addTo(map);
-                    userMarker.bindPopup("Vị trí thực tế của bạn").openPopup();
+L.geoJSON(localHazardGeoJSON, {
+    style(feature) {
+        const color = feature.properties.risk_level === 'high' ? '#e74c3c' : '#f1c40f';
+        return { color, weight: 2, fillOpacity: 0.35 };
+    },
+    onEachFeature(feature, layer) {
+        layer.bindPopup('<b>' + feature.properties.name + '</b><br/>Mức rủi ro: ' + feature.properties.risk_level);
+    }
+}).addTo(map);
 
-                    var weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=b1b15e88fa797225412429c1c50c122a&units=metric`;
-                    
-                    fetch(weatherUrl).then(res => res.json()).then(data => {
-                        var rain = data.rain ? (data.rain['1h'] || 0) : 0;
-                        var prob = Math.min((rain * 2) + 2.5, 100);
-                        displayAIResult(data.name || "Vị trí của bạn", rain, 4, "Đất đô thị ổn định / Bằng phẳng", prob, []);
-                    }).catch(() => {
-                        displayAIResult("Vị trí của bạn", 0, 3, "Trạng thái bình thường", 12.0, []);
+function clearOldLayers() {
+    if (userMarker) { map.removeLayer(userMarker); }
+    activeMarkers.forEach(function (m) { map.removeLayer(m); });
+    activeMarkers = [];
+    document.getElementById('ai-report').innerHTML = "";
+}
+
+function calculateDynamicProbability(rain, slope, soil_type) {
+    const soil_factor = (soil_type.includes('Đá') || soil_type.includes('ổn định')) ? 0.3 :
+                        (soil_type.includes('feralit')) ? 1.2 : 2.5;
+
+    const baseProb = (rain * 0.4) + (slope * soil_factor);
+    const randomFluctuation = (Math.random() * 6) - 3;
+    const finalProb = baseProb + randomFluctuation;
+
+    return Math.max(1.2, Math.min(finalProb, 99.8));
+}
+
+function startRealTimeGPS() {
+    clearOldLayers();
+    document.getElementById('ai-status').innerHTML = "⏳ Đang kết nối vệ tinh lấy tọa độ thật...";
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            map.setView([lat, lng], 15);
+            userMarker = L.circleMarker([lat, lng], { color: 'blue', fillColor: '#30f', fillOpacity: 0.8, radius: 10 }).addTo(map);
+
+            const geoUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
+
+            fetch(geoUrl).then(res => res.json()).then(geoData => {
+                const exactLocation = geoData.display_name || "Vị trí của bạn";
+                userMarker.bindPopup("Vị trí: " + exactLocation).openPopup();
+
+                const API_KEY = "ace148a0ed0f689698dafb5685c8019f";
+                const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${API_KEY}&units=metric&lang=vi`;
+
+                document.getElementById('ai-status').innerHTML = "⏳ Đang phân tích dữ liệu khí tượng thực tế...";
+
+                fetch(weatherUrl)
+                    .then(res => {
+                        if (!res.ok) throw new Error("API Key lỗi.");
+                        return res.json();
+                    })
+                    .then(data => {
+                        const actualRain = data.rain ? (data.rain['1h'] || 0) : 0;
+                        const weatherDesc = data.weather && data.weather[0] ? data.weather[0].description : "Đang cập nhật";
+                        const simRain = actualRain === 0 ? (Math.random() * 10) : actualRain;
+                        const simSlope = 3 + Math.random() * 2;
+                        const soilDesc = "Đất đô thị ổn định / Bằng phẳng";
+                        const prob = calculateDynamicProbability(simRain, simSlope, soilDesc);
+                        const currentStatus = `${soilDesc} / Thời tiết hiện tại: ${weatherDesc} (Nhiệt độ: ${data.main.temp}°C)`;
+
+                        displayAIResult(exactLocation, simRain.toFixed(1), simSlope.toFixed(1), currentStatus, prob.toFixed(1), []);
+                    })
+                    .catch(err => {
+                        document.getElementById('ai-status').innerHTML = "❌ Lỗi Fetch API Thời tiết.";
                     });
-                }, function() {
-                    document.getElementById('ai-status').innerHTML = "❌ Không lấy được GPS. Hãy bật định vị!";
-                });
-            }
-        }
-
-        // ==========================================
-        // MÔ PHỎNG 1: ĐÈO MÃ PÍ LÈNG (HÀ GIANG) - ĐÈO DỐC ĐỨNG
-        // ==========================================
-        function startSimMaPiLeng() {
-            clearOldLayers();
-            document.getElementById('ai-status').innerHTML = "⏳ Đang quét trạm đo địa chất Đèo Mã Pí Lèng...";
-            
-            var lat = 22.4335, lng = 105.4180; // Tọa độ đèo Mã Pí Lèng
-            map.setView([lat, lng], 14);
-            userMarker = L.circleMarker([lat, lng], { color: 'blue', fillColor: '#30f', fillOpacity: 0.8, radius: 10 }).addTo(map);
-            userMarker.bindPopup("<b>Giả lập:</b> Tài xế đang di chuyển trên đèo").openPopup();
-
-            var rain = 168.0; // Mưa bão lớn cực đoan
-            var slope = 45;   // Vách đá đứng 45 độ
-            var soil = "Đá vôi phong hóa mạnh, xuất hiện nhiều vết nứt cơ học chứa nước đọng";
-            var prob = 94.5;  // Xác suất sạt lở đá cực cao
-
-            var escapeNodes = [
-                { lat: 22.4360, lng: 105.4210, title: "📍 Mốc 1: Hốc cứu nạn đá vôi kiên cố" },
-                { lat: 22.4410, lng: 105.4250, title: "🏁 ĐÍCH ĐẾN: Điểm hạ đèo an toàn / Trạm dừng chân" }
-            ];
-
-            setTimeout(function() {
-                displayAIResult("Đèo Mã Pí Lèng (Hà Giang)", rain, slope, soil, prob, escapeNodes);
-            }, 1200);
-        }
-
-        // ==========================================
-        // MÔ PHỎNG 2: MƯỜNG LAY (ĐIỆN BIÊN) - TÂY BẮC SẠT LỞ BỜ SÔNG
-        // ==========================================
-        function startSimMuongLay() {
-            clearOldLayers();
-            document.getElementById('ai-status').innerHTML = "⏳ Đang quét trạm thủy văn Thị xã Mường Lay...";
-            
-            var lat = 22.0667, lng = 103.1500; // Tọa độ Mường Lay
-            map.setView([lat, lng], 14);
-            userMarker = L.circleMarker([lat, lng], { color: 'blue', fillColor: '#30f', fillOpacity: 0.8, radius: 10 }).addTo(map);
-            userMarker.bindPopup("<b>Giả lập:</b> Hộ dân vùng thung lũng sông").openPopup();
-
-            var rain = 110.0; 
-            var slope = 32;   
-            var soil = "Đất dốc tụ, sườn tích mềm nhão khi ngấm nước lâu ngày, vách taluy âm kém ổn định";
-            var prob = 81.2;  // Trên 70% -> Sạt lở sườn sông
-
-            var escapeNodes = [
-                { lat: 22.0690, lng: 103.1540, title: "📍 Mốc 1: Đường bê tông liên xã đi lên cao" },
-                { lat: 22.0720, lng: 103.1600, title: "🏁 ĐÍCH ĐẾN: Khu nhà văn hóa vùng cao tái định cư" }
-            ];
-
-            setTimeout(function() {
-                displayAIResult("Thị xã Mường Lay (Điện Biên)", rain, slope, soil, prob, escapeNodes);
-            }, 1200);
-        }
-
-        // ==========================================
-        // MÔ PHỎNG 3: VQG BÙ GIA MẬP
-        // ==========================================
-        function startSimBGM() {
-            clearOldLayers();
-            document.getElementById('ai-status').innerHTML = "⏳ Đang kết nối cảm biến rừng Bù Gia Mập...";
-            
-            var lat = 12.2035, lng = 107.2112;
-            map.setView([lat, lng], 14);
-            userMarker = L.circleMarker([lat, lng], { color: 'blue', fillColor: '#30f', fillOpacity: 0.8, radius: 10 }).addTo(map);
-            userMarker.bindPopup("<b>Giả lập:</b> Khách du lịch bìa rừng").openPopup();
-
-            var rain = 45.0; // Mưa dông bình thường
-            var slope = 22;   
-            var soil = "Đất feralit đỏ kết cấu chặt, thảm thực vật rừng giữ đất tốt";
-            var prob = 43.5;  // Dưới 70% -> Chỉ ở mức nguy cơ đề phòng
-
-            setTimeout(function() {
-                displayAIResult("VQG Bù Gia Mập (Bình Phước)", rain, slope, soil, prob, []);
-            }, 1200);
-        }
-
-        // ==========================================
-        // CHATBOX AI HIỂN THỊ KẾT QUẢ VÀ ĐỌC BIỆN PHÁP
-        // ==========================================
-        function displayAIResult(location, rain, slope, soil, prob, points) {
-            document.getElementById('ai-status').innerHTML = "⚙️ Phân tích toán học hoàn tất!";
-            var statusDiv = document.getElementById('user-status');
-            
-            var reportHtml = `
-                <p>📍 <b>Vị trí quét:</b> ${location}</p>
-                <p>🌧️ <b>Lượng mưa 24h:</b> ${rain} mm</p>
-                <p>📐 <b>Độ dốc mái taluy:</b> ${slope}°</p>
-                <p>🌱 <b>Cấu trúc địa chất:</b> <span style="color: #3498db;">${soil}</span></p>
-                <p style="font-size: 15px; font-weight: bold; color: #ffcc00;">📊 XÁC SUẤT SẠT LỞ ĐẤT: ${prob}%</p>
-                <hr style="border-color: #4f5d73;">
-            `;
-
-            if (prob >= 70) {
-                statusDiv.innerHTML = "🚨 NGUY HIỂM: SẠT LỞ ĐẤT LẬP TỨC!";
-                statusDiv.className = "status danger";
-                reportHtml += `
-                    <p style="color: #e74c3c; font-weight: bold;">📢 [CHỈ THỊ AI]: Xác suất sạt lở vượt ngưỡng an toàn (${prob}% >= 70%).</p>
-                    <p style="color: #2ecc71;">🗺️ Đã tự động rải các chấm mốc lánh nạn an toàn dọc đường bộ tránh sườn núi dốc. Di chuyển theo các dấu chấm 📍 hiển thị trên bản đồ ngay!</p>
-                `;
-            } else {
-                statusDiv.innerHTML = "⚠️ CÓ NGUY CƠ TIỀM ẨN";
-                statusDiv.className = "status warning";
-                reportHtml += `
-                    <p style="color: #f1c40f; font-weight: bold;">📢 [CHỈ THỊ AI]: Chỉ số an toàn (${prob}% < 70%). Khu vực chưa có dấu hiệu dịch chuyển khối trượt sạt lở lớn. Người dân chú ý đề phòng, cập nhật tình hình thời tiết.</p>
-                `;
-            }
-
-            document.getElementById('ai-report').innerHTML = reportHtml;
-
-            // Đặt các mốc chỉ đường lên bản đồ
-            points.forEach(function(coord) {
-                var m = L.marker([coord.lat, coord.lng]).addTo(map);
-                m.bindPopup(`<b>${coord.title}</b>`);
-                activeMarkers.push(m);
             });
-            if(points.length > 0) points[0].openPopup();
+        }, function (error) {
+            document.getElementById('ai-status').innerHTML = "❌ Lỗi GPS: Vui lòng cho phép trình duyệt truy cập vị trí!";
+        });
+    } else {
+        document.getElementById('ai-status').innerHTML = "❌ Trình duyệt không hỗ trợ GPS.";
+    }
+}
+
+function startSimMaPiLeng() {
+    clearOldLayers();
+    document.getElementById('ai-status').innerHTML = "⏳ Đang quét trạm đo địa chất Đèo Mã Pí Lèng...";
+
+    const lat = 22.4335, lng = 105.4180;
+    map.setView([lat, lng], 14);
+    userMarker = L.circleMarker([lat, lng], { color: 'blue', fillColor: '#30f', fillOpacity: 0.8, radius: 10 }).addTo(map);
+    userMarker.bindPopup("<b>Giả lập:</b> Tài xế đang di chuyển trên đèo").openPopup();
+
+    const rain = 150 + Math.random() * 30;
+    const slope = 45;
+    const soil = "Đá vôi phong hóa mạnh, nứt nẻ cơ học";
+    const prob = calculateDynamicProbability(rain, slope, soil);
+
+    const escapeNodes = [
+        { lat: 22.4365, lng: 105.4200, title: "📍 Mốc 1: Hốc cứu nạn đá vôi kiên cố" },
+        { lat: 22.4410, lng: 105.4260, title: "🏁 ĐÍCH ĐẾN: Điểm hạ đèo an toàn / Trạm dừng chân" }
+    ];
+
+    setTimeout(function () { displayAIResult("Đèo Mã Pí Lèng (Hà Giang)", rain.toFixed(1), slope, soil, prob.toFixed(1), escapeNodes); }, 1200);
+}
+
+function startSimMuongLay() {
+    clearOldLayers();
+    document.getElementById('ai-status').innerHTML = "⏳ Đang quét trạm thủy văn Thị xã Mường Lay...";
+
+    const lat = 22.0667, lng = 103.1500;
+    map.setView([lat, lng], 14);
+    userMarker = L.circleMarker([lat, lng], { color: 'blue', fillColor: '#30f', fillOpacity: 0.8, radius: 10 }).addTo(map);
+    userMarker.bindPopup("<b>Giả lập:</b> Hộ dân vùng thung lũng sông").openPopup();
+    const rain = 90 + Math.random() * 20;
+    const slope = 32;
+    const soil = "Đất dốc tụ, sườn tích mềm nhão";
+    const prob = calculateDynamicProbability(rain, slope, soil);
+
+    const escapeNodes = [
+        { lat: 22.0690, lng: 103.1550, title: "📍 Mốc 1: Đường bê tông liên xã đi lên cao" },
+        { lat: 22.0720, lng: 103.1610, title: "🏁 ĐÍCH ĐẾN: Khu nhà văn hóa vùng cao tái định cư" }
+    ];
+
+    setTimeout(function () { displayAIResult("Thị xã Mường Lay (Điện Biên)", rain.toFixed(1), slope, soil, prob.toFixed(1), escapeNodes); }, 1200);
+}
+
+function startSimBGM() {
+    clearOldLayers();
+    document.getElementById('ai-status').innerHTML = "⏳ Đang kết nối cảm biến rừng Bù Gia Mập...";
+
+    const lat = 12.2035, lng = 107.2112;
+    map.setView([lat, lng], 14);
+    userMarker = L.circleMarker([lat, lng], { color: 'blue', fillColor: '#30f', fillOpacity: 0.8, radius: 10 }).addTo(map);
+    userMarker.bindPopup("<b>Giả lập:</b> Khách du lịch bìa rừng").openPopup();
+
+    const rain = 30 + Math.random() * 15;
+    const slope = 22;
+    const soil = "Đất feralit đỏ kết cấu chặt, thảm thực vật giữ đất tốt";
+    const prob = calculateDynamicProbability(rain, slope, soil);
+
+    setTimeout(function () { displayAIResult("VQG Bù Gia Mập (Bình Phước)", rain.toFixed(1), slope, soil, prob.toFixed(1), []); }, 1200);
+}
+
+function displayAIResult(location, rain, slope, soil, prob, points) {
+    document.getElementById('ai-status').innerHTML = "⚙️ Phân tích toán học hoàn tất!";
+    const statusDiv = document.getElementById('user-status');
+
+    let reportHtml = `
+        <p>📍 <b>Vị trí quét:</b> ${location}</p>
+        <p>🌧️ <b>Lượng mưa 24h:</b> ${rain} mm</p>
+        <p>📐 <b>Độ dốc mái taluy:</b> ${slope}°</p>
+        <p>🌱 <b>Cấu trúc địa chất:</b> <span style="color: #3498db;">${soil}</span></p>
+        <p style="font-size: 15px; font-weight: bold; color: #ffcc00;">📊 XÁC SUẤT SẠT LỞ ĐẤT: ${prob}%</p>
+        <hr style="border-color: #4f5d73;">
+    `;
+
+    if (prob >= 70) {
+        statusDiv.innerHTML = "🚨 NGUY HIỂM: SẠT LỞ ĐẤT LẬP TỨC!";
+        statusDiv.className = "status danger";
+        reportHtml += `
+            <p style="color: #e74c3c; font-weight: bold;">📢 [CHỈ THỊ AI]: Xác suất sạt lở vượt ngưỡng an toàn (${prob}% >= 70%).</p>
+            <p style="color: #2ecc71;">🗺️ Đã tự động rải các chấm mốc lánh nạn an toàn dọc đường bộ tránh sườn núi dốc. Di chuyển theo các dấu chấm 📍 hiển thị trên bản đồ ngay!</p>
+        `;
+    } else {
+        statusDiv.innerHTML = "⚠️ CÓ NGUY CƠ TIỀM ẨN";
+        statusDiv.className = "status warning";
+        reportHtml += `
+            <p style="color: #f1c40f; font-weight: bold;">📢 [CHỈ THỊ AI]: Chỉ số an toàn (${prob}% < 70%). Khu vực chưa có dấu hiệu dịch chuyển khối trượt sạt lở lớn. Người dân chú ý đề phòng, cập nhật tình hình thời tiết.</p>
+        `;
+    }
+
+    document.getElementById('ai-report').innerHTML = reportHtml;
+
+    points.forEach(function (coord) {
+        const m = L.marker([coord.lat, coord.lng]).addTo(map);
+        m.bindPopup(`<b>${coord.title}</b>`);
+        activeMarkers.push(m);
+    });
+    if (points.length > 0) activeMarkers[0].openPopup();
+}
+
+window.startRealTimeGPS = startRealTimeGPS;
+window.startSimMaPiLeng = startSimMaPiLeng;
+window.startSimMuongLay = startSimMuongLay;
+window.startSimBGM = startSimBGM;
+window.displayAIResult = displayAIResult;
+// 👇 HÀM ĐÓNG/MỞ MENU TRÊN ĐIỆN THOẠI 👇
+        function toggleMenu() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('map-overlay').classList.toggle('open');
         }
+    </script>
+</body>
+</html>
+        
     </script>
 </body>
 </html>
