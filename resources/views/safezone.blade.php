@@ -23,6 +23,12 @@
                     </form>
                 </div>
             @endauth
+            @guest
+                <div class="auth-links d-flex gap-2">
+                    <a href="{{ route('login') }}" class="btn btn-sm btn-outline-light">Đăng nhập</a>
+                    <a href="{{ route('register') }}" class="btn btn-sm btn-light">Đăng ký</a>
+                </div>
+            @endguest
         </div>
         
         <div class="mode-box">

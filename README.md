@@ -1,58 +1,116 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🛡️ SAFE ZONE
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Demo đa kịch bản cảnh báo thiên tai tại Việt Nam** — ứng dụng bản đồ tương tác giúp người dùng quét vị trí thực tế (GPS) hoặc mô phỏng các kịch bản thiên tai (sạt lở đèo, lũ sông, cháy rừng núi) và nhận phân tích lý thuyết về mức độ nguy hiểm của khu vực.
 
-## About Laravel
+Xây dựng trên **Laravel 13** + **Leaflet** + **Bootstrap 5**.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## ✨ Tính năng
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- 🗺️ **Bản đồ tương tác** (Leaflet) hiển thị vùng an toàn / vùng nguy hiểm.
+- 🌐 **Chế độ thực tế (GPS):** quét vị trí hiện tại của người dùng.
+- ⛰️ **Mô phỏng kịch bản thiên tai:**
+  - Đèo Mã Pí Lèng (sạt lở đèo)
+  - Mường Lay – Điện Biên (lũ sông/sườn)
+  - VQG Bù Gia Mập (rừng núi)
+- 🤖 **Phân tích lý thuyết đất** theo từng kịch bản.
+- 🔐 **Xác thực người dùng (Auth):** đăng ký, đăng nhập, đăng xuất.
+  - Trang chủ `/` **truy cập tự do** (không bắt buộc đăng nhập).
+  - Khách được hiển thị nút **Đăng nhập / Đăng ký**; người dùng đã đăng nhập thấy lời chào và nút **Đăng xuất**.
+- 📱 **Giao diện tương thích mobile:** trên màn hình nhỏ (≤768px) bố cục tự xếp dọc — bản đồ ở trên, bảng điều khiển ở dưới.
+- 🔌 **API hazards:** `GET /api/v1/hazards`.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🚀 Cài đặt
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+Yêu cầu: **PHP ^8.3**, **Composer**, **Node.js**, **MySQL**.
 
 ```bash
-composer require laravel/boost --dev
+# 1. Cài dependencies
+composer install
+npm install
 
-php artisan boost:install
+# 2. Tạo file môi trường & app key
+cp .env.example .env
+php artisan key:generate
+
+# 3. Cấu hình database trong .env (DB_DATABASE, DB_USERNAME, DB_PASSWORD)
+#    rồi chạy migration
+php artisan migrate
+
+# 4. Build assets
+npm run build
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## ▶️ Chạy dự án
 
-## Contributing
+```bash
+# Cách nhanh (server + queue + logs + vite chạy song song)
+composer dev
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# Hoặc thủ công
+php artisan serve
+npm run dev
+```
 
-## Code of Conduct
+Truy cập: <http://127.0.0.1:8000>
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+## 🗂️ Các route chính
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+| Method | URI | Mô tả | Yêu cầu |
+|--------|-----|-------|---------|
+| GET | `/` | Trang chủ SAFE ZONE | Tự do |
+| GET | `/safezone` | Alias trang chủ | Tự do |
+| GET / POST | `/login` | Đăng nhập | Khách (`guest`) |
+| GET / POST | `/register` | Đăng ký tài khoản | Khách (`guest`) |
+| POST | `/logout` | Đăng xuất | Đã đăng nhập (`auth`) |
+| GET | `/api/v1/hazards` | API danh sách hazard | Tự do |
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 🔐 Luồng xác thực
+
+1. Khách vào `/` tự do, thấy nút **Đăng nhập / Đăng ký** trên sidebar.
+2. **Đăng ký** (`name`, `email`, `password` + xác nhận, tối thiểu 8 ký tự) → tự động đăng nhập → quay lại trang chủ.
+3. **Đăng nhập** (`email`, `password`, tùy chọn *ghi nhớ đăng nhập*) → quay lại trang trước đó.
+4. **Đăng xuất** → hủy session → về trang đăng nhập.
+
+Mật khẩu được băm bằng `Hash::make`; session lưu ở database (`SESSION_DRIVER=database`).
+
+---
+
+## 🧱 Cấu trúc liên quan
+
+```text
+app/Http/Controllers/
+├── SafeZoneController.php        # Trang chủ
+├── HazardApiController.php       # API hazards
+└── Auth/
+    ├── LoginController.php
+    ├── RegisterController.php
+    └── LogoutController.php
+resources/views/
+├── safezone.blade.php           # Giao diện chính + nút auth
+├── layouts/app.blade.php        # Layout cho trang auth
+└── auth/{login,register}.blade.php
+resources/css/safezone.css        # CSS + media query mobile
+routes/web.php
+```
+
+---
+
+## 🧪 Kiểm thử
+
+```bash
+php artisan test
+```
+
+---
+
+## 📄 License
+
+Mã nguồn khung Laravel phát hành theo [giấy phép MIT](https://opensource.org/licenses/MIT).
