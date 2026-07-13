@@ -1,0 +1,9 @@
+{
+  "name": "SAFE ZONE",
+  "short_name": "SAFE ZONE",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "description": "Ứng dụng cảnh báo sạt lở và lũ lụt",
+  "icons": []
+}

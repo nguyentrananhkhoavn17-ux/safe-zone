@@ -1,0 +1,20 @@
+@import "bootstrap/dist/css/bootstrap.min.css";
+@import "leaflet/dist/leaflet.css";
+
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; display: flex; height: 100vh; }
+#map { flex: 3; height: 100%; }
+#sidebar { flex: 1; background: #2c3e50; color: white; padding: 20px; display: flex; flex-direction: column; box-shadow: -2px 0 5px rgba(0,0,0,0.3); overflow-y: auto; }
+h2 { color: #e74c3c; margin-top: 0; border-bottom: 2px solid #e74c3c; padding-bottom: 10px; }
+.mode-box { background: #34495e; padding: 10px; border-radius: 5px; margin-bottom: 12px; border: 1px solid #4f5d73; }
+.mode-title { font-weight: bold; margin-bottom: 6px; color: #3498db; font-size: 13.5px; }
+.btn { width: 100%; color: white; border: none; padding: 8px; font-size: 13px; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 5px; transition: 0.3s; }
+.btn-real { background: #2ecc71; }
+.btn-real:hover { background: #27ae60; }
+.btn-sim { background: #e67e22; }
+.btn-sim:hover { background: #d35400; }
+#ai-box { background: #1a252f; border-left: 5px solid #e74c3c; padding: 15px; margin-top: 10px; border-radius: 4px; flex-grow: 1; }
+.ai-title { color: #e74c3c; font-weight: bold; margin-bottom: 10px; }
+.status { font-weight: bold; padding: 5px; border-radius: 3px; display: inline-block; margin-top: 5px; font-size: 12.5px; }
+.danger { background: #e74c3c; color: white; }
+.warning { background: #f1c40f; color: black; }
+.safe { background: #2ecc71; color: white; }
