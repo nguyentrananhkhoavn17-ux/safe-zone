@@ -59,6 +59,11 @@
             <div id="ai-status">Vui lòng chọn kịch bản để phân tích...</div>
             <div id="ai-report" style="margin-top: 10px;"></div>
         </div>
+        <div style="margin-top: auto; padding-top: 15px; border-top: 1px solid #4f5d73; font-size: 11px; color: #bdc3c7; text-align: center;">
+    <b>Bản quyền phần mềm © 2026</b><br>
+    Tác giả: Nguyễn Trần Anh Khoa & Tạ Hoàng Ngân<br>
+    Lớp 10B - Trường THPT Chuyên Quang Trung
+</div>
     </div>
 
 </body>
